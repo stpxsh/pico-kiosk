@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test-client": "node test_client.js"
+    "ctest": "node test_client.js",
+    "ctest-raw": "node test_client.js --raw"
   },
   "dependencies": {
     "express": "^5.2.1",
