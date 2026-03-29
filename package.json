@@ -1,0 +1,15 @@
+{
+  "name": "pico-kiosk-backend",
+  "version": "1.0.0",
+  "description": "Backend pro generovani 1-bit obrazu pro Pico W",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test-client": "node test_client.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "puppeteer": "^24.40.0",
+    "sharp": "^0.34.5"
+  }
+}

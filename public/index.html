@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rozvrh</title>
+    <style>
+        /* * Reset a zakladni nastaveni pro 480x320.
+         * Pouzivame jen cernou a bilou, protoze Sharp to stejne orizne.
+         */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            width: 480px;
+            height: 320px;
+            background-color: white;
+            color: black;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 4px solid black;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 2px solid black;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: black;
+            color: white;
+            font-size: 14px;
+        }
+        td {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .time { font-size: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <header>Učebna 101 - Dnes</header>
+    <table>
+        <tr>
+            <th>8:00 - 8:45</th>
+            <th>8:55 - 9:40</th>
+            <th>10:00 - 10:45</th>
+        </tr>
+        <tr>
+            <td>
+                Matematika<br>
+                <span class="time">Nováková</span>
+            </td>
+            <td>
+                Fyzika<br>
+                <span class="time">Svoboda</span>
+            </td>
+            <td>
+                Angličtina<br>
+                <span class="time">Dvořák</span>
+            </td>
+        </tr>
+        <tr>
+            <th>10:55 - 11:40</th>
+            <th>11:50 - 12:35</th>
+            <th>12:45 - 13:30</th>
+        </tr>
+        <tr>
+            <td>
+                Programování<br>
+                <span class="time">Černý</span>
+            </td>
+            <td>
+                Oběd
+            </td>
+            <td>
+                Tělocvik<br>
+                <span class="time">Krejčí</span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
