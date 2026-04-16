@@ -9,6 +9,10 @@ EPD_WIDTH = 800
 EPD_HEIGHT = 480
 PAYLOAD_SIZE = (EPD_WIDTH * EPD_HEIGHT) // 8  # 48000 B
 
+# Backend posila 1 = cerny pixel, 0 = bily pixel.
+# EPD RAM pro BW rovinu bere opacnou logiku, proto je potreba invertovat bity.
+PAYLOAD_BLACK_IS_ONE = True
+
 PIN_RST = 12
 PIN_DC = 8
 PIN_CS = 9
@@ -32,13 +36,16 @@ class EPD75BMono:
 
         self.spi = SPI(
             1,
-            baudrate=4_000_000,
+            baudrate=10_000_000,
             polarity=0,
             phase=0,
             sck=Pin(PIN_SCK),
             mosi=Pin(PIN_MOSI),
             miso=None,
         )
+
+        # Reusable buffer pro invertovany sloupec (setri RAM proti cele kopii payloadu).
+        self._inv_buf = bytearray(self.height)
 
     def _delay_ms(self, ms):
         time.sleep_ms(ms)
@@ -126,18 +133,27 @@ class EPD75BMono:
         # Stejny prenosovy format jako referencni Waveshare driver pro 7.5-B.
         high = self.height
         wide = self.width // 8
+        mv = memoryview(payload)
 
         self._cmd(0x10)  # black/white RAM
         for i in range(wide):
             start = i * high
-            self._data_block(payload[start : start + high])
+            src = mv[start : start + high]
+
+            if PAYLOAD_BLACK_IS_ONE:
+                inv = self._inv_buf
+                for j in range(high):
+                    inv[j] = src[j] ^ 0xFF
+                self._data_block(inv)
+            else:
+                self._data_block(src)
 
         # Red RAM nechame prazdnou (ciste cernobily provoz).
         self._cmd(0x13)
-        zeros = b"\x00" * 1200
+        zeros = b"\x00" * 4096
         remaining = PAYLOAD_SIZE
         while remaining > 0:
-            chunk = 1200 if remaining >= 1200 else remaining
+            chunk = 4096 if remaining >= 4096 else remaining
             self._data_block(zeros[:chunk])
             remaining -= chunk
 

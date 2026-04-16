@@ -82,15 +82,15 @@ Projekt je plně připravený pro kontejnerizaci. Používá předvytvořený `D
 
 ### Konfigurace
 
-Nastavení se bere primárně z `config.js`, kde lze hodnoty přepsat přes env proměnné:
+Nastavení je staticky v `config.js` (bez `.env`) a mění se přímo editací objektu:
 
--   `PORT` (default `3000`) - port serveru
--   `HOST` (default `0.0.0.0`) - bind adresa serveru
--   `PUBLIC_DIR` (default `./public`) - odkud server servíruje statické soubory
--   `SOURCE_PAGE_PATH` (default `/index.html`) - interní cesta stránky pro render
--   `SOURCE_PAGE_URL` (výchozí se skládá z `http://localhost:${PORT}${SOURCE_PAGE_PATH}`) - plná URL stránky pro Puppeteer
--   `DISPLAY_WIDTH` (default `800`) - šířka displeje
--   `DISPLAY_HEIGHT` (default `480`) - výška displeje
--   `DISPLAY_THRESHOLD` (default `128`) - práh pro černobílý převod (`0-255`)
--   `PUPPETEER_EXECUTABLE_PATH` - cesta k systémovému Chromiu/Chrome
--   `PUPPETEER_HEADLESS` (default `new`) - Puppeteer headless režim
+-   `server.host` - bind adresa serveru
+-   `server.port` - port serveru
+-   `server.publicDir` - odkud server servíruje statické soubory
+-   `source.pagePath` - interní cesta stránky pro render
+-   `source.pageUrl` - plná URL stránky pro Puppeteer
+-   `display.width` - šířka displeje
+-   `display.height` - výška displeje
+-   `display.threshold` - práh pro černobílý převod (`0-255`)
+-   `puppeteer.headless` - Puppeteer headless režim
+-   `puppeteer.executablePath` - cesta k systémovému Chromiu/Chrome (volitelné)

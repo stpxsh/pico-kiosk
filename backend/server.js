@@ -1,10 +1,9 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const sharp = require('sharp');
-const getConfig = require('./config');
+const config = require('./config');
 
 const app = express();
-const config = getConfig();
 const { server, source, display, puppeteer: puppeteerConfig } = config;
 
 // Servírujeme statické soubory (náš HTML rozvrh) ze složky 'public'
@@ -16,6 +15,7 @@ async function generateDisplayPayload() {
   const page = await browser.newPage();
   await page.setViewport({ width: display.width, height: display.height });
 
+  console.debug(`Naviguji na ${source.pageUrl}...`);
   await page.goto(source.pageUrl, { waitUntil: 'networkidle0' });
 
   const screenshotBuffer = await page.screenshot();
