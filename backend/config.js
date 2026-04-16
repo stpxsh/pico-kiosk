@@ -9,7 +9,7 @@ const config = {
     source: {
         pagePath: '/index.html',
         // pageUrl: 'http://localhost:3000/index.html'
-        pageUrl: 'https://spssol.cz'
+        pageUrl: 'https://gfmlztjjmhgadxbzcgnl.supabase.co/storage/v1/object/public/components_assets/krackonos_meme.webp'
     },
     display: {
         width: 800,
