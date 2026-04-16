@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html lang="cs">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rozvrh</title>
     <style>
-        /* * Reset a zakladni nastaveni pro 480x320.
+        /* * Reset a zakladni nastaveni pro 800x480.
          * Pouzivame jen cernou a bilou, protoze Sharp to stejne orizne.
          */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            width: 480px;
-            height: 320px;
+            width: 800px;
+            height: 480px;
             background-color: white;
             color: black;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,6 +28,7 @@
             border-width: 3px;
             border-color: red;
         }
+
         header {
             text-align: center;
             font-size: 24px;
@@ -30,28 +37,38 @@
             border-bottom: 4px solid black;
             padding-bottom: 5px;
         }
+
         table {
             width: 100%;
             height: 100%;
             border-collapse: collapse;
         }
-        th, td {
+
+        th,
+        td {
             border: 2px solid black;
             text-align: center;
             vertical-align: middle;
         }
+
         th {
             background-color: black;
             color: white;
             font-size: 14px;
         }
+
         td {
             font-size: 16px;
             font-weight: bold;
         }
-        .time { font-size: 10px; font-weight: normal; }
+
+        .time {
+            font-size: 10px;
+            font-weight: normal;
+        }
     </style>
 </head>
+
 <body>
     <header>Učebna 101 - Dnes</header>
     <table>
@@ -94,4 +111,5 @@
         </tr>
     </table>
 </body>
+
 </html>

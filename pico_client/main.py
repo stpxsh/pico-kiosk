@@ -1,7 +1,153 @@
 import network
 import time
-import requests # V MicroPythonu to funguje podobně jako v běžném Pythonu
-import secrets # Custom secrets module with WiFi credentials
+from machine import Pin, SPI
+import requests
+import secrets
+
+
+EPD_WIDTH = 800
+EPD_HEIGHT = 480
+PAYLOAD_SIZE = (EPD_WIDTH * EPD_HEIGHT) // 8  # 48000 B
+
+PIN_RST = 12
+PIN_DC = 8
+PIN_CS = 9
+PIN_BUSY = 13
+PIN_SCK = 10
+PIN_MOSI = 11
+
+# E-paper full refresh je pomaly a panel by se nemel obnovovat moc casto.
+REFRESH_INTERVAL_S = 180
+
+
+class EPD75BMono:
+    def __init__(self):
+        self.width = EPD_WIDTH
+        self.height = EPD_HEIGHT
+
+        self.rst = Pin(PIN_RST, Pin.OUT)
+        self.dc = Pin(PIN_DC, Pin.OUT)
+        self.cs = Pin(PIN_CS, Pin.OUT)
+        self.busy = Pin(PIN_BUSY, Pin.IN, Pin.PULL_UP)
+
+        self.spi = SPI(
+            1,
+            baudrate=4_000_000,
+            polarity=0,
+            phase=0,
+            sck=Pin(PIN_SCK),
+            mosi=Pin(PIN_MOSI),
+            miso=None,
+        )
+
+    def _delay_ms(self, ms):
+        time.sleep_ms(ms)
+
+    def _cmd(self, value):
+        self.dc.value(0)
+        self.cs.value(0)
+        self.spi.write(bytearray([value]))
+        self.cs.value(1)
+
+    def _data(self, value):
+        self.dc.value(1)
+        self.cs.value(0)
+        self.spi.write(bytearray([value]))
+        self.cs.value(1)
+
+    def _data_block(self, buf):
+        self.dc.value(1)
+        self.cs.value(0)
+        self.spi.write(buf)
+        self.cs.value(1)
+
+    def _wait_idle(self):
+        print("EPD busy...")
+        while self.busy.value() == 0:
+            self._delay_ms(20)
+        self._delay_ms(20)
+        print("EPD ready")
+
+    def _reset(self):
+        self.rst.value(1)
+        self._delay_ms(200)
+        self.rst.value(0)
+        self._delay_ms(2)
+        self.rst.value(1)
+        self._delay_ms(200)
+
+    def init(self):
+        self._reset()
+
+        self._cmd(0x06)  # Booster Soft Start
+        self._data(0x17)
+        self._data(0x17)
+        self._data(0x28)
+        self._data(0x17)
+
+        self._cmd(0x04)  # Power ON
+        self._delay_ms(100)
+        self._wait_idle()
+
+        self._cmd(0x00)  # Panel setting
+        self._data(0x0F)
+
+        self._cmd(0x61)  # Resolution setting (800x480)
+        self._data(0x03)
+        self._data(0x20)
+        self._data(0x01)
+        self._data(0xE0)
+
+        self._cmd(0x15)
+        self._data(0x00)
+
+        self._cmd(0x50)  # VCOM and data interval
+        self._data(0x11)
+        self._data(0x07)
+
+        self._cmd(0x60)  # TCON setting
+        self._data(0x22)
+
+        self._cmd(0x65)
+        self._data(0x00)
+        self._data(0x00)
+        self._data(0x00)
+        self._data(0x00)
+
+    def _refresh(self):
+        self._cmd(0x12)  # Display refresh
+        self._delay_ms(100)
+        self._wait_idle()
+
+    def display_bw_payload(self, payload):
+        if len(payload) != PAYLOAD_SIZE:
+            raise ValueError("Neocekavana delka payloadu: {} (cekam {})".format(len(payload), PAYLOAD_SIZE))
+
+        # Stejny prenosovy format jako referencni Waveshare driver pro 7.5-B.
+        high = self.height
+        wide = self.width // 8
+
+        self._cmd(0x10)  # black/white RAM
+        for i in range(wide):
+            start = i * high
+            self._data_block(payload[start : start + high])
+
+        # Red RAM nechame prazdnou (ciste cernobily provoz).
+        self._cmd(0x13)
+        zeros = b"\x00" * 1200
+        remaining = PAYLOAD_SIZE
+        while remaining > 0:
+            chunk = 1200 if remaining >= 1200 else remaining
+            self._data_block(zeros[:chunk])
+            remaining -= chunk
+
+        self._refresh()
+
+    def sleep(self):
+        self._cmd(0x02)
+        self._wait_idle()
+        self._cmd(0x07)
+        self._data(0xA5)
 
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
@@ -27,68 +173,52 @@ def connect_wifi():
         status = wlan.ifconfig()
         print('Pripojeno k WiFi! IP adresa:', status[0])
 
-def fetch_and_print_image():
-    print(f"\nStahuji data z {secrets.SERVER_URL} ...")
-    
+def fetch_payload():
+    print("\nStahuji data z {} ...".format(secrets.SERVER_URL))
+
     try:
-        # HTTP GET request
         response = requests.get(secrets.SERVER_URL)
-        
+
         if response.status_code == 200:
-            # Přečteme binární payload do paměti (Pico W má 264KB RAM, 19.2KB se vejde hravě)
             data = response.content
-            print(f"Uspesne stazeno {len(data)} bytu!\n")
-            
-            # --- Vykreslení do terminálu ---
-            width = 480
-            height = 320
-            step_x = 4 # Vykreslíme každý 4. pixel (aby se to vešlo na šířku monitoru)
-            step_y = 8 # Vykreslíme každý 8. pixel (terminálové znaky jsou vysoké)
-            
-            print('+' + '-' * (width // step_x) + '+')
-            
-            for y in range(0, height, step_y):
-                line_str = '|'
-                for x in range(0, width, step_x):
-                    # Zjištění, ve kterém bytu a bitu se pixel nachází (stejná matematika jako v JS)
-                    bit_index = y * width + x
-                    byte_index = bit_index // 8
-                    bit_in_byte = 7 - (bit_index % 8)
-                    
-                    # Logický AND pro zjištění hodnoty bitu (zda je černý)
-                    is_black = data[byte_index] & (1 << bit_in_byte)
-                    
-                    if is_black:
-                        line_str += '█' # Znak pro černý pixel
-                    else:
-                        line_str += ' ' # Mezera pro bílý pixel
-                        
-                line_str += '|'
-                print(line_str)
-                
-            print('+' + '-' * (width // step_x) + '+')
-            print("\nVykreslovani dokonceno. Cekam na dalsi cyklus...")
-            
+            print("Uspesne stazeno {} bytu".format(len(data)))
+            return data
+
         else:
-            print(f"Chyba serveru: Status {response.status_code}")
-            
+            print("Chyba serveru: Status {}".format(response.status_code))
+            return None
+
     except Exception as e:
-        print(f"Chyba pri stahovani: {e}")
+        print("Chyba pri stahovani: {}".format(e))
+        return None
     finally:
-        # Je dobré zavřít spojení, abychom nevyčerpali paměť (sockets)
         if 'response' in locals():
             response.close()
 
 # --- HLAVNÍ SMYČKA ---
 try:
     connect_wifi()
-    
-    # Zatím to necháme běžet v nekonečné smyčce, ať vidíme, že to žije
+
+    epd = EPD75BMono()
+    epd.init()
+
     while True:
-        fetch_and_print_image()
-        time.sleep(10) # Počká 10 vteřin a stáhne to znovu
+        payload = fetch_payload()
+        if payload is not None:
+            try:
+                epd.display_bw_payload(payload)
+                print("Obraz vykreslen na displej.")
+            except Exception as e:
+                print("Chyba pri vykresleni: {}".format(e))
+
+        print("Cekam {} s do dalsiho refresh...".format(REFRESH_INTERVAL_S))
+        time.sleep(REFRESH_INTERVAL_S)
 
 except KeyboardInterrupt:
     print("\nProgram ukoncen uzivatelem.")
+    try:
+        epd.sleep()
+    except Exception:
+        pass
 except Exception as e:
-    print(f"\nKriticka chyba: {e}")
+    print("\nKriticka chyba: {}".format(e))

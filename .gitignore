@@ -2,3 +2,4 @@ node_modules
 bin_out/
 payload.bin
 secrets.py
+.env

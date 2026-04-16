@@ -3,9 +3,9 @@
 Tento projekt slouží jako prostředník (backend) mezi responzivním HTML designem a mikrokontrolérem Raspberry Pi Pico W osazeným e-ink displejem.
 
 ## Co to dělá?
-Server vezme běžnou HTML stránku (např. rozvrh hodin či informační panel uložený ve složce `public`), na pozadí spustí neviditelný prohlížeč Chrome pomocí knihovny Puppeteer a celou stránku vyfotí v přesném rozlišení displeje (480x320 pixelů).
+Server vezme běžnou HTML stránku (např. rozvrh hodin či informační panel uložený ve složce `public`), na pozadí spustí neviditelný prohlížeč Chrome pomocí knihovny Puppeteer a celou stránku vyfotí v přesném rozlišení displeje (800x480 pixelů).
 
-Následně snímek převede do černobílé škály a zkomprimuje na binární úroveň tak, že 8 pixelů sbalí do 1 bytu. Výsledkem je super malý a optimalizovaný soubor o velikosti pouhých cca 19 KB. Tento hotový _payload_ si Pico už jen stáhne a rovnou metodou 1:1 vykreslí na e-ink displej, čímž ušetří maximum výkonu mikrokontroléru.
+Následně snímek převede do černobílé škály a zkomprimuje na binární úroveň tak, že 8 pixelů sbalí do 1 bytu. Výsledkem je super malý a optimalizovaný soubor o velikosti pouhých cca 47 KB. Tento hotový _payload_ si Pico už jen stáhne a rovnou metodou 1:1 vykreslí na e-ink displej, čímž ušetří maximum výkonu mikrokontroléru.
 
 ## Struktura projektu
 
@@ -14,6 +14,7 @@ Následně snímek převede do černobílé škály a zkomprimuje na binární �
 ├── .gitignore         # Ignorované soubory (node_modules, bin_out/)
 ├── Dockerfile         # Konfigurace pro kontejnerizaci s připraveným m.j. Puppeteer/Chromium
 ├── package.json       # Závislosti projektu (express, puppeteer, sharp, atd.)
+├── config.js          # Centrální konfigurace (port, zdroj stránky, displej, Puppeteer)
 ├── server.js          # Hlavní kód backend serveru a zpracování obrazu
 ├── test_client.js     # Testovací skript pro simulaci požadavku mikrokontroléru
 ├── bin_out/           # Složka pro generované testovací binárky (ignorováno v Gitu)
@@ -77,4 +78,19 @@ Projekt je plně připravený pro kontejnerizaci. Používá předvytvořený `D
 ## Důležité info pro úpravy
 
 -   Vzhled obrazovky se kompletně definuje a upravuje ve složce **`public/index.html`** (následně lze napojit klidně i na CSS a JS z této složky).
--   Rozlišení výstupu je **napevno nastaveno na 480x320 pixelů**. Pokud v budoucnu zvolíte jiný displej (jiný počet pixelů či orientaci), musíte překalibrovat kódy v souboru **`server.js`** a adekvátně roztáhnout viewport.
+-   Hlavní runtime nastavení je nyní v souboru **`config.js`**.
+
+### Konfigurace
+
+Nastavení se bere primárně z `config.js`, kde lze hodnoty přepsat přes env proměnné:
+
+-   `PORT` (default `3000`) - port serveru
+-   `HOST` (default `0.0.0.0`) - bind adresa serveru
+-   `PUBLIC_DIR` (default `./public`) - odkud server servíruje statické soubory
+-   `SOURCE_PAGE_PATH` (default `/index.html`) - interní cesta stránky pro render
+-   `SOURCE_PAGE_URL` (výchozí se skládá z `http://localhost:${PORT}${SOURCE_PAGE_PATH}`) - plná URL stránky pro Puppeteer
+-   `DISPLAY_WIDTH` (default `800`) - šířka displeje
+-   `DISPLAY_HEIGHT` (default `480`) - výška displeje
+-   `DISPLAY_THRESHOLD` (default `128`) - práh pro černobílý převod (`0-255`)
+-   `PUPPETEER_EXECUTABLE_PATH` - cesta k systémovému Chromiu/Chrome
+-   `PUPPETEER_HEADLESS` (default `new`) - Puppeteer headless režim
