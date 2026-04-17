@@ -165,6 +165,25 @@ class EPD75BMono:
         self._cmd(0x07)
         self._data(0xA5)
 
+    def safe_sleep_and_discharge(self):
+        # Nejdriv softwarove uspime EPD radic, aby se vypnuly nabojove pumpy.
+        try:
+            self.sleep()
+        except Exception as e:
+            print("Varovani: Uspavani displeje selhalo: {}".format(e))
+
+        # Uvolneni SPI periferie a stazeni linek na LOW kvuli zbytkovemu napeti.
+        try:
+            self.spi.deinit()
+        except Exception:
+            pass
+
+        Pin(PIN_MOSI, Pin.OUT).value(0)  # DIN
+        Pin(PIN_SCK, Pin.OUT).value(0)   # CLK
+        Pin(PIN_CS, Pin.OUT).value(0)
+        Pin(PIN_DC, Pin.OUT).value(0)
+        Pin(PIN_RST, Pin.OUT).value(0)
+
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
@@ -215,26 +234,27 @@ def fetch_payload():
 try:
     connect_wifi()
 
-    epd = EPD75BMono()
-    epd.init()
-
     while True:
         payload = fetch_payload()
         if payload is not None:
+            epd = EPD75BMono()
             try:
+                epd.init()
                 epd.display_bw_payload(payload)
                 print("Obraz vykreslen na displej.")
             except Exception as e:
                 print("Chyba pri vykresleni: {}".format(e))
+            finally:
+                try:
+                    epd.safe_sleep_and_discharge()
+                    print("Displej uspan")
+                except Exception as e:
+                    print("Chyba pri uspani/vybiti pinu: {}".format(e))
 
         print("Cekam {} s do dalsiho refresh...".format(REFRESH_INTERVAL_S))
         time.sleep(REFRESH_INTERVAL_S)
 
 except KeyboardInterrupt:
     print("\nProgram ukoncen uzivatelem.")
-    try:
-        epd.sleep()
-    except Exception:
-        pass
 except Exception as e:
     print("\nKriticka chyba: {}".format(e))
