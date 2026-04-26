@@ -8,8 +8,8 @@ const config = {
     },
     source: {
         pagePath: '/index.html',
-        // pageUrl: 'http://localhost:3000/index.html'
-        pageUrl: 'https://hranice.link/november'
+        pageUrl: 'http://localhost:3000/index.html'
+        //pageUrl: 'https://spssol.cz'
     },
     display: {
         width: 800,
