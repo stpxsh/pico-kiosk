@@ -1,5 +1,7 @@
 node_modules
 bin_out/
+3d/
 payload.bin
 secrets.py
 .env
+
