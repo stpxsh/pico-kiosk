@@ -45,9 +45,15 @@ Pro spuštění v režimu lokálního vývojáře stačí stáhnout repozitář 
 
 ## Jak to otestovat bez hw
 
-Pokud na stole zrovna nemáte zapojené Pico W s displejem, využijte dodávaný testovací skript.
+Pokud na stole zrovna nemáte zapojené Pico W s displejem, můžete využít dodávaný testovací skript.
 
--   **Náhled v terminálu (Braillovo písmo)**
+-   **V jednom okně spustťe server**
+    > test skript sám o sobě nemůže nic načítat
+    ```bash
+    npm start
+    ```
+
+-   **V druhém okně terminálu zobrazte náhled (Braillovo písmo)**
     Vyzvedne obraz a pokusí se ho simulovat v terminálu.
     ```bash
     node test_client.js
