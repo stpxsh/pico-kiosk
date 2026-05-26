@@ -8,7 +8,8 @@ const config = {
     },
     source: {
         pagePath: '/index.html',
-        pageUrl: 'http://localhost:3000/index.html'
+        bakabridge: 'http://maturis.spss.local:4444/timetable',
+        // pageUrl: 'http://localhost:3000/index.html'
         //pageUrl: 'https://spssol.cz'
     },
     display: {

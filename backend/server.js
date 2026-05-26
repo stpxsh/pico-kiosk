@@ -9,14 +9,15 @@ const { server, source, display, puppeteer: puppeteerConfig } = config;
 // Servírujeme statické soubory (náš HTML rozvrh) ze složky 'public'
 app.use(express.static(server.publicDir));
 
-async function generateDisplayPayload() {
+async function generateDisplayPayload(roomId) {
   const browser = await puppeteer.launch(puppeteerConfig);
 
   const page = await browser.newPage();
   await page.setViewport({ width: display.width, height: display.height });
 
   console.debug(`Naviguji na ${source.pageUrl}...`);
-  await page.goto(source.pageUrl, { waitUntil: 'networkidle0' });
+  const url = `${source.bakabridge}?room_id=${encodeURIComponent(roomId)}`;
+  await page.goto(url, { waitUntil: 'networkidle0' });
 
   const screenshotBuffer = await page.screenshot();
   await browser.close();
@@ -43,9 +44,13 @@ async function generateDisplayPayload() {
 }
 
 app.get('/api/display', async (req, res) => {
+  const roomId = req.query.room_id;
+  if (!roomId) {
+    return res.status(400).send('Chybi parametr room_id');
+  }
   try {
     console.log(`[${new Date().toISOString()}] Generuji obraz pro Pico W...`);
-    const payload = await generateDisplayPayload();
+    const payload = await generateDisplayPayload(roomId);
     res.set('Content-Type', 'application/octet-stream');
     res.set('Content-Length', payload.length);
     res.send(payload);

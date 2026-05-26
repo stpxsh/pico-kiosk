@@ -209,10 +209,11 @@ def connect_wifi():
         print('Pripojeno k WiFi! IP adresa:', status[0])
 
 def fetch_payload():
-    print("\nStahuji data z {} ...".format(secrets.SERVER_URL))
+    print("\nStahuji data z {}?room_id={} ...".format(secrets.SERVER_URL, secrets.ROOM_ID))
 
     try:
-        response = requests.get(secrets.SERVER_URL)
+        url = "{}?room_id={}".format(secrets.SERVER_URL, secrets.ROOM_ID)
+        response = requests.get(url)
 
         if response.status_code == 200:
             data = response.content
